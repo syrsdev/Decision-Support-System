@@ -1,15 +1,5 @@
-# Core libraries
-streamlit==1.28.0
-pandas==1.5.3
-numpy==1.24.0
-
-# Machine Learning & Data Mining
-mlxtend==0.21.0
-scikit-learn==1.2.0
-
-# Excel support
-openpyxl==3.0.10
-
-# Visualization (optional)
-matplotlib==3.6.0
-plotly==5.11.0
+streamlit
+pandas
+mlxtend
+openpyxl
+numpy
