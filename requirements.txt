@@ -3,3 +3,6 @@ pandas
 mlxtend
 openpyxl
 numpy
+seaborn
+matplotlib
+xlsxwriter
