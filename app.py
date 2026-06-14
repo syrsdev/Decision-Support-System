@@ -343,7 +343,7 @@ if uploaded_file is not None:
             else:
                 st.warning("⚠️ Tidak ada aturan yang ditemukan. Coba turunkan nilai Support atau Confidence.")
         
-        # ======================================================================
+               # ======================================================================
         # MENU 5: EVALUATION
         # ======================================================================
         elif menu == "📈 Evaluation & Analysis":
@@ -351,7 +351,7 @@ if uploaded_file is not None:
             
             if rules_df is not None and len(rules_df) > 0:
                 # Distribusi Metrik
-                st.markdown("#### 📊 Distribusi Metrik")
+                st.markdown("####  Distribusi Metrik")
                 
                 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
                 
@@ -375,6 +375,37 @@ if uploaded_file is not None:
                 plt.tight_layout()
                 st.pyplot(fig)
                 
+                # Validasi Model
+                st.markdown("---")
+                st.markdown("#### ✅ Validasi Model")
+                
+                st.markdown("""
+                **Metode Validasi:**
+                1. **Internal Validation**: Menggunakan metrik Support, Confidence, dan Lift
+                2. **Threshold Validation**: 
+                   - Support ≥ 0.10 (aturan muncul minimal di 10% transaksi)
+                   - Confidence ≥ 0.50 (keyakinan minimal 50%)
+                   - Lift > 1.0 (hubungan positif, bukan kebetulan)
+                """)
+                
+                valid_rules = rules_df[
+                    (rules_df['support'] >= 0.10) & 
+                    (rules_df['confidence'] >= 0.50) & 
+                    (rules_df['lift'] > 1.0)
+                ]
+                
+                quality_rules = rules_df[rules_df['lift'] > 1.2]
+                
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Total Aturan", len(rules_df))
+                col2.metric("Aturan Valid", len(valid_rules))
+                col3.metric("Aturan Berkualitas (Lift>1.2)", len(quality_rules))
+                
+                if len(quality_rules) >= 10:
+                    st.success("✅ MODEL DIVALIDASI: Ditemukan minimal 10 aturan berkualitas!")
+                else:
+                    st.warning("⚠️ MODEL PERLU IMPROVEMENT: Hanya {} aturan berkualitas".format(len(quality_rules)))
+                
                 # Analisis Mendalam
                 st.markdown("---")
                 st.markdown("#### 💡 Analisis Mendalam Aturan Terbaik")
@@ -395,7 +426,6 @@ if uploaded_file is not None:
                         st.write("- **Confidence**: {:.3f} ({:.1f}%)".format(row['confidence'], row['confidence']*100))
                         st.write("- **Lift**: {:.3f}".format(row['lift']))
                         
-                        # Interpretasi
                         st.markdown("**Interpretasi:**")
                         if row['lift'] > 1.3:
                             st.success("🟢 Hubungan SANGAT KUAT - Rekomendasi sangat direkomendasikan")
@@ -408,11 +438,15 @@ if uploaded_file is not None:
                 st.markdown("---")
                 st.markdown("#### 🔍 Pola Khusus yang Menarik")
                 
-                # MK yang paling sering jadi antecedent
                 antecedent_count = {}
                 for rule in rules_df.itertuples():
                     for mk in rule.antecedents:
                         antecedent_count[mk] = antecedent_count.get(mk, 0) + 1
+                
+                consequent_count = {}
+                for rule in rules_df.itertuples():
+                    for mk in rule.consequents:
+                        consequent_count[mk] = consequent_count.get(mk, 0) + 1
                 
                 col1, col2 = st.columns(2)
                 
@@ -423,16 +457,38 @@ if uploaded_file is not None:
                         st.write("- {}: {} aturan".format(mk, count))
                 
                 with col2:
-                    # MK yang paling sering direkomendasikan
-                    consequent_count = {}
-                    for rule in rules_df.itertuples():
-                        for mk in rule.consequents:
-                            consequent_count[mk] = consequent_count.get(mk, 0) + 1
-                    
                     st.markdown("**MK Paling Sering Direkomendasikan:**")
                     sorted_con = sorted(consequent_count.items(), key=lambda x: x[1], reverse=True)
                     for mk, count in sorted_con[:5]:
                         st.write("- {}: {} aturan".format(mk, count))
+                
+                # Business Insight
+                st.markdown("---")
+                st.markdown("#### 💼 Rekomendasi Bisnis untuk Program Studi")
+                
+                st.info("""
+                **1. PENJADWALAN MATA KULIAH:**
+                - Hindari bentrok antara mata kuliah yang memiliki korelasi tinggi
+                - Kelompokkan MK dengan Lift > 1.3 dalam slot waktu yang berbeda
+                """)
+                
+                st.success("""
+                **2. KONSELING AKADEMIK:**
+                - Gunakan sistem rekomendasi ini sebagai tools dosen wali
+                - Mahasiswa yang mengambil MK tertentu memiliki pola yang dapat diprediksi
+                """)
+                
+                st.warning("""
+                **3. PENGEMBANGAN KURIKULUM:**
+                - Pertimbangkan membuat paket MK terintegrasi
+                - MK dengan popularitas tinggi (>80%) perlu diperhatikan kapasitasnya
+                """)
+                
+                st.error("""
+                **4. EARLY WARNING SYSTEM:**
+                - Identifikasi mahasiswa yang mengambil kombinasi MK tidak umum
+                - Berikan pendampingan ekstra untuk mencegah DO/mengulang
+                """)
             else:
                 st.warning("⚠️ Tidak ada data untuk dievaluasi.")
         
